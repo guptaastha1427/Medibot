@@ -1,4 +1,10 @@
 import os
+
+# Force CPU-only in hosted environments (prevents libcublas/CUDA lookups)
+os.environ.setdefault("CUDA_VISIBLE_DEVICES", "")
+os.environ.setdefault("TRANSFORMERS_NO_CUDA", "1")
+os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
+
 import streamlit as st
 
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -17,7 +23,10 @@ load_dotenv(find_dotenv())
 DB_FAISS_PATH="vectorstore/db_faiss"
 @st.cache_resource
 def get_vectorstore():
-    embedding_model=HuggingFaceEmbeddings(model_name='sentence-transformers/all-MiniLM-L6-v2')
+    embedding_model = HuggingFaceEmbeddings(
+        model_name='sentence-transformers/all-MiniLM-L6-v2',
+        model_kwargs={"device": "cpu"}
+    )
     db=FAISS.load_local(DB_FAISS_PATH, embedding_model, allow_dangerous_deserialization=True)
     return db
 
